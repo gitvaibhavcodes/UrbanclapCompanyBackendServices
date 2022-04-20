@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option csharp_namespace = "CustomerService.Protos";
+
+service CustomerProtoService{
+
+	rpc GetCustomer(GetCustomerByIdRequest) returns (CustomerResponse);
+	
+}
+
+message GetCustomerByIdRequest
+{ int32 id =1;
+}
+
+message GrpcCustomerModel{
+	int32 id =1;
+	string name = 2;
+	string location =3;
+}
+
+message CustomerResponse
+{
+    repeated GrpcCustomerModel customer =1;
+}
+

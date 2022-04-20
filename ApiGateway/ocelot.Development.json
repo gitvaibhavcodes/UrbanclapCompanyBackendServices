@@ -1,0 +1,59 @@
+{
+  "Routes": [
+    
+    {
+      "ServiceName": "AmenityService",
+      "DownstreamPathTemplate": "/api/amenity/{id}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenity/{id}",
+      "UpstreamHttpMethod": [ "GET" ]
+
+    },
+    {
+      "ServiceName": "AmenityService",
+      "DownstreamPathTemplate": "/api/amenity",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenity",
+      "UpstreamHttpMethod": [ "GET" ]
+
+    },
+    {
+      "ServiceName": "AmenityService",
+      "DownstreamPathTemplate": "/api/amenity",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenity",
+      "UpstreamHttpMethod": [ "POST" ]
+
+    },
+    {
+      "ServiceName": "AmenityOrderingService",
+      "DownstreamPathTemplate": "/api/amenityOrder/{id}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenityOrder/{id}",
+      "UpstreamHttpMethod": [ "GET" ]
+
+    },
+    {
+      "ServiceName": "AmenityOrderingService",
+      "DownstreamPathTemplate": "/api/amenityOrder",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenityOrder",
+      "UpstreamHttpMethod": [ "GET" ]
+
+    },
+    {
+      "ServiceName": "AmenityOrderingService",
+      "DownstreamPathTemplate": "/api/amenityOrder",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/amenityOrder",
+      "UpstreamHttpMethod": [ "POST" ]
+
+    }
+    
+  ],
+  "GlobalConfiguration": {
+    "Host": "consul",
+    "Port": "8500",
+    "Type": "Consul"
+  }
+}
