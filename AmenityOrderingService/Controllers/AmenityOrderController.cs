@@ -57,59 +57,54 @@ namespace AmenityOrderingService.Controllers
         public async Task<ActionResult<AmenityOrderReadDto>> AddAmenityOrder(AmenityOrderAddDto amenityOrderAddDto)
         {
             var amenityOrder = _mapper.Map<AmenityOrder>(amenityOrderAddDto);
-
-            var response = await _grpcCustomerService.GetCustomerById(amenityOrderAddDto.CustomerId);
             try
             {
-                var requestClient = _bus.CreateRequestClient<AmenityOrderManagerRequestEvent>(RequestTimeout.After(m: 30));
-                var amenityOrderEventResponse = await requestClient.GetResponse<AmenityOrderManagerResponseEvent>(amenityOrderAddDto);
-                if (amenityOrderEventResponse.ExpirationTime < DateTime.Now)
+                var response = await _grpcCustomerService.GetCustomerById(amenityOrderAddDto.CustomerId);
+                if (response.Customer != null)
                 {
-                    if (amenityOrderEventResponse.Message.IsAvailable && amenityOrderEventResponse.Message.IsAccepted)
+                    var requestClient = _bus.CreateRequestClient<AmenityOrderManagerRequestEvent>(RequestTimeout.After(m: 30));
+                    var amenityOrderEventResponse = await requestClient.GetResponse<AmenityOrderManagerResponseEvent>(amenityOrderAddDto);
+                    if (amenityOrderEventResponse.ExpirationTime < DateTime.Now)
                     {
-                        _amenityOrderRepository.AddAmenityOrder(amenityOrder);
-                        _amenityOrderRepository.SaveChanges();
-                        
-                        var amenityOrderResponse = new AmenityOrderResponse
+                        if (amenityOrderEventResponse.Message.IsAvailable && amenityOrderEventResponse.Message.IsAccepted)
                         {
-                            OrderId = amenityOrder.Id,
-                            ProviderName = amenityOrderEventResponse.Message.ProviderName,
-                            CustomerId = amenityOrderEventResponse.Message.CustomerId,
-                            IsAccepted = amenityOrderEventResponse.Message.IsAccepted,
-                            IsAvailable = amenityOrderEventResponse.Message.IsAvailable,
-                            Amenity = amenityOrderEventResponse.Message.Amenity,
-                            AmenityProviderId = amenityOrderEventResponse.Message.AmenityProviderId
-                        };
-                        await helper.SendOrderContextToNotificationService(amenityOrderResponse);
-                        var amenityOrderReadDto = _mapper.Map<AmenityOrderReadDto>(amenityOrder);
-                        return CreatedAtRoute(nameof(GetAmenityOrderById), new { Id = amenityOrderReadDto.Id }, amenityOrderReadDto);
+                            _amenityOrderRepository.AddAmenityOrder(amenityOrder);
+                            _amenityOrderRepository.SaveChanges();
+
+                            var amenityOrderResponse = new AmenityOrderResponse
+                            {
+                                OrderId = amenityOrder.Id,
+                                ProviderName = amenityOrderEventResponse.Message.ProviderName,
+                                CustomerId = amenityOrderEventResponse.Message.CustomerId,
+                                IsAccepted = amenityOrderEventResponse.Message.IsAccepted,
+                                IsAvailable = amenityOrderEventResponse.Message.IsAvailable,
+                                Amenity = amenityOrderEventResponse.Message.Amenity,
+                                AmenityProviderId = amenityOrderEventResponse.Message.AmenityProviderId
+                            };
+                            await helper.SendOrderContextToNotificationService(amenityOrderResponse);
+                            var amenityOrderReadDto = _mapper.Map<AmenityOrderReadDto>(amenityOrder);
+                            return CreatedAtRoute(nameof(GetAmenityOrderById), new { Id = amenityOrderReadDto.Id }, amenityOrderReadDto);
+                        }
+                        else
+                        {
+                            return NotFound("Could not place the order!");
+                        }
                     }
                     else
                     {
-                        return NotFound("Could not place the order!");
+                        throw new TimeoutException();
                     }
                 }
                 else
-                {
-                    throw new TimeoutException();
-                }
+                    throw new HttpRequestException("Invalid customer!");
+
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
-            
-            //if(response.Customer != null)
-            //{
-            //    //var validCustomer = _mapper.Map<Customer>(response.Customer);
-            //    _amenityOrderRepository.AddAmenityOrder(amenityOrder);
-            //    _amenityOrderRepository.SaveChanges();
 
-            //    var amenityOrderReadDto = _mapper.Map<AmenityOrderReadDto>(amenityOrder);
-            //    return CreatedAtRoute(nameof(GetAmenityOrderById), new { Id = amenityOrderReadDto.Id }, amenityOrderReadDto);
-            //}
-            
-            throw new HttpRequestException("Invalid customer!");
+            return BadRequest();            
         }
     }
 }
